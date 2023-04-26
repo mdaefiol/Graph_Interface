@@ -1,0 +1,6 @@
+../Core/Src/fram.c:26:6:FRAM_ID	8	static
+../Core/Src/fram.c:36:6:FRAM_enablewrite	8	static
+../Core/Src/fram.c:47:6:FRAM_resetWrite	16	static
+../Core/Src/fram.c:62:6:FRAM_StatusRegister	8	static
+../Core/Src/fram.c:73:6:FRAM_Write	24	static
+../Core/Src/fram.c:90:6:FRAM_Read	24	static
