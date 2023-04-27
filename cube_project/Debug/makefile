@@ -60,8 +60,8 @@ all: main-build
 main-build: graphical_interface.elf secondary-outputs
 
 # Tool invocations
-graphical_interface.elf graphical_interface.map: $(OBJS) $(USER_OBJS) C:\Users\mdaef\Documents\GitHub\graph_interface\graphical_interface\STM32F103CBTX_FLASH.ld makefile objects.list $(OPTIONAL_TOOL_DEPS)
-	arm-none-eabi-gcc -o "graphical_interface.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m3 -T"C:\Users\mdaef\Documents\GitHub\graph_interface\graphical_interface\STM32F103CBTX_FLASH.ld" --specs=nosys.specs -Wl,-Map="graphical_interface.map" -Wl,--gc-sections -static --specs=nano.specs -mfloat-abi=soft -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
+graphical_interface.elf graphical_interface.map: $(OBJS) $(USER_OBJS) C:\Users\mdaef\Documents\GitHub\graph_interface\cube_project\STM32F103CBTX_FLASH.ld makefile objects.list $(OPTIONAL_TOOL_DEPS)
+	arm-none-eabi-gcc -o "graphical_interface.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m3 -T"C:\Users\mdaef\Documents\GitHub\graph_interface\cube_project\STM32F103CBTX_FLASH.ld" --specs=nosys.specs -Wl,-Map="graphical_interface.map" -Wl,--gc-sections -static --specs=nano.specs -mfloat-abi=soft -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
 	@echo 'Finished building target: $@'
 	@echo ' '
 
