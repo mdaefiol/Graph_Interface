@@ -61,7 +61,7 @@ static void MX_USART2_UART_Init(void);
 /* USER CODE BEGIN 0 */
 
 uint8_t datawrite[8] = {0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08};
-uint8_t datareceive[8];
+uint8_t datareceive[80];
 #define MAX_SIZE 1000
 
 /* USER CODE END 0 */
@@ -99,29 +99,6 @@ int main(void)
   MX_USART2_UART_Init();
 
   /* USER CODE BEGIN 2 */
-  float data[MAX_SIZE];
-  unsigned char bytes[MAX_SIZE * sizeof(float)];
-  FILE *fp;
-  int i, num_elements;
-
-  // Abrir o arquivo para leitura
-  fp = fopen("x.txt", "rb");
-
-  // Ler os dados do arquivo
-  num_elements = fread(data, sizeof(float), MAX_SIZE, fp);
-
-  // Converter os dados para bytes e armazenar no array
-  /*
-  for (i = 0; i < num_elements; i++) {
-    unsigned char *ptr = (unsigned char *)&data[i];
-    int j;
-    for (j = 0; j < sizeof(float); j++) {
-      bytes[i*sizeof(float) + j] = *(ptr + j);
-    }
-  }
-*/
-  // Fechar o arquivo
-  fclose(fp);
 
   /* USER CODE END 2 */
 
@@ -136,12 +113,13 @@ int main(void)
 	  HAL_Delay(100);
 	  FRAM_Read(0x6004, datareceive, 8);
 	  HAL_Delay(100);
+*/
 
 	  // recebe os dados da FRAM e envia pela UART
-	  HAL_UART_Transmit(&huart2, &datareceive, 8, 1000); // Envia os bytes pela UART
+	  HAL_UART_Receive(&huart2, datareceive, 8, 1000); // Envia os bytes pela UART
 
 	  HAL_Delay(10);
-*/
+
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
