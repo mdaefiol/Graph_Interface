@@ -60,8 +60,7 @@ static void MX_USART2_UART_Init(void);
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
 
-uint8_t datawrite[8] = {0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08};
-uint8_t datareceive[80];
+uint8_t datareceive[8];
 #define MAX_SIZE 1000
 
 /* USER CODE END 0 */
@@ -99,24 +98,23 @@ int main(void)
   MX_USART2_UART_Init();
 
   /* USER CODE BEGIN 2 */
-
+  uint8_t datawrite[8] = {0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08};
+  uint8_t datareceive[5];
+  uint8_t rx_buffer[1] = {0x01};
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-	  // seta FRAM, grava dados e recebe de volta
-/*
-	  FRAM_enablewrite();
-	  FRAM_Write(0x6004, datawrite, 8) ;
-	  HAL_Delay(100);
-	  FRAM_Read(0x6004, datareceive, 8);
-	  HAL_Delay(100);
-*/
 
-	  // recebe os dados da FRAM e envia pela UART
-	  HAL_UART_Receive(&huart2, datareceive, 8, 1000); // Envia os bytes pela UART
+	  // seta FRAM, grava dados e recebe de volta
+
+	  HAL_UART_Transmit(&huart2,rx_buffer , 1, 1000);
+	  if (rx_buffer[0] == 0x01)
+	  {
+		  HAL_UART_Receive(&huart2, datareceive, 5, 1000); // Envia os bytes pela UART
+	  }
 
 	  HAL_Delay(10);
 

@@ -9,6 +9,7 @@ class SerialApp():
         self.serial_port = serial.Serial()
         self.baudrates = [9600, 115200]
         self.portlist = []
+        self.connected_port = None
 
     # Update das portas COM disponíveis
     def update_port_list(self):
@@ -63,7 +64,7 @@ def main():
         [sg.Text("Baudrate:"), sg.Combo(serial_app.baudrates, default_value=9600, size=(20, 1), key="-BAUDRATE-")],
         [sg.Button("Conectar", key="-CONNECT-"), sg.Button("Desconectar", key="-DISCONNECT-", disabled=True)],
         [sg.Text("Dados Recebidos:"), sg.Multiline(size=(50, 10), key="-DATA-")],
-        [sg.Button("Salvar Dados", key="-SAVE-", disabled=True)],
+        [sg.Button("Salvar Dados", key="-SAVE-", disabled=True), sg.Button("START", key="-START-", disabled=True)],
         [sg.Text(size=(40, 1), key="-FINALIZED-")]
     ]
 
@@ -80,32 +81,44 @@ def main():
             baudrate = int(values["-BAUDRATE-"])
             try:
                 serial_app.connect_serial(port, baudrate)
-                connected = True
-                window["-CONNECT-"].update(disabled=True)
-                window["-DISCONNECT-"].update(disabled=False)
+                serial_app.connected_port = port               # Armazena a porta conectada na variável "connected_port"
+                window["-CONNECT-"].update(disabled=True)      # Desabilita o botão conectar
+                window["-DISCONNECT-"].update(disabled=False)  # Habilita botão desconectar
                 window["-SAVE-"].update(disabled=True)         # Desabilita o botão "Salvar Dados"
+                window["-START-"].update(disabled=False)       # Habilita o botão de enviar o comando pela serial
+                # Salva os dados após desconectar da porta serial
+
             except Exception as e:
-                sg.popup_error(f"Erro ao conectar na porta {port}: {e}")
+                sg.popup_error("Erro ao conectar na porta")
 
         if event == "-DISCONNECT-":
             serial_app.close_serial()
             connected = False
-            window["-CONNECT-"].update(disabled=False)
-            window["-DISCONNECT-"].update(disabled=True)
+            window["-CONNECT-"].update(disabled=False)            # Habilita o botão conectar
+            window["-DISCONNECT-"].update(disabled=True)          # Desabilita o botão desconectar
             window["-SAVE-"].update(disabled=False)               # Habilita o botão "Salvar Dados"
+            window["-START-"].update(disabled=True)               # Desabilita o botão "START"
 
         if event == "-SAVE-":
             data = window["-DATA-"].get()                         # Obtém os dados recebidos
-            save_to_file(data, "data.txt")
+            save_to_file(data, "data.txt")                        # Salva os dados em um arquivo data.txt
+
+        if event == "-START-":
+            if serial_app.connected_port:
+                serial_app.serial_port.write(bytes([0x01]))
+                connected = True
+                # Envie um sinal pela serial usando a porta armazenada em "connected_port"
+            else:
+                sg.popup_error("Nenhuma porta serial conectada.")
 
         if connected:
             try:
                 data = serial_app.read_serial().hex()
                 if data:
-                    window["-DATA-"].print(data)
+                    window["-DATA-"].print(data)                 # Printa os dados na interface
 
             except Exception as e:
-                sg.popup_error(f"Erro ao ler dados da porta {port}: {e}")
+                sg.popup_error("Erro ao ler dados da porta.")
 
         if event == sg.WIN_CLOSED:
             break
