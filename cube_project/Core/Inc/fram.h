@@ -10,6 +10,7 @@
 
 #include "stm32f1xx_hal.h"
 
+
 void FRAM_ID(void);
 void FRAM_enablewrite(void);
 void FRAM_resetWrite(void);

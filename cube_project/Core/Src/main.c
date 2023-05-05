@@ -18,7 +18,8 @@
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
-#include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
@@ -44,6 +45,14 @@ SPI_HandleTypeDef hspi1;
 
 UART_HandleTypeDef huart2;
 
+typedef struct {
+    float accel_x;
+    float accel_y;
+    float accel_z;
+    float pressao;
+} SensorData;
+
+
 /* USER CODE BEGIN PV */
 
 /* USER CODE END PV */
@@ -59,9 +68,6 @@ static void MX_USART2_UART_Init(void);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-
-uint8_t datareceive[8];
-#define MAX_SIZE 1000
 
 /* USER CODE END 0 */
 
@@ -92,36 +98,65 @@ int main(void)
   /* USER CODE END SysInit */
 
   /* Initialize all configured peripherals */
-
   MX_GPIO_Init();
   MX_SPI1_Init();
   MX_USART2_UART_Init();
 
   /* USER CODE BEGIN 2 */
-  uint8_t datawrite[8] = {0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08};
-  uint8_t datareceive[5];
-  uint8_t rx_buffer[1] = {0x01};
+
+  // Enviar byte 0x01 para iniciar a recepção de dados
+
+  uint8_t rx_byte[1] = {0x01};
+  uint8_t rx_buffer[16];
+  SensorData sensor_data = {0};
+
+  float aux[6];
+
+  uint32_t data_hex;
+  float data_float;
+
+
+  int data_received_count = 0;
+  int loop_count = 0;
+  HAL_UART_Transmit(&huart2, rx_byte, 1, 1000);
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
-  while (1)
-  {
 
-	  // seta FRAM, grava dados e recebe de volta
+while (data_received_count < 4 && loop_count < 2 ) {
 
-	  HAL_UART_Transmit(&huart2,rx_buffer , 1, 1000);
-	  if (rx_buffer[0] == 0x01)
-	  {
-		  HAL_UART_Receive(&huart2, datareceive, 5, 1000); // Envia os bytes pela UART
-	  }
+     if (rx_byte[0] == 0x01) {
+         HAL_UART_Receive(&huart2, rx_buffer, 16, 1000);
+         data_hex = (rx_buffer[0] << 24) | (rx_buffer[1] << 16) | (rx_buffer[2] << 8) | rx_buffer[3];
+         data_float = *(float*)&data_hex;
+         sensor_data.accel_x = data_float;
 
-	  HAL_Delay(10);
+         data_hex = (rx_buffer[4] << 24) | (rx_buffer[5] << 16) | (rx_buffer[6] << 8) | rx_buffer[7];
+         data_float = *(float*)&data_hex;
+         sensor_data.accel_y = data_float;
+
+         data_hex = (rx_buffer[8] << 24) | (rx_buffer[9] << 16) | (rx_buffer[10] << 8) | rx_buffer[11];
+         data_float = *(float*)&data_hex;
+         sensor_data.accel_z = data_float;
+
+         data_hex = (rx_buffer[12] << 24) | (rx_buffer[13] << 16) | (rx_buffer[14] << 8) | rx_buffer[15];
+         data_float = *(float*)&data_hex;
+         sensor_data.pressao = data_float;
+
+         data_received_count++;
+
+     3
+	 aux[i] =  sensor_data.accel_x ;
+	 aux[i+1] =  sensor_data.accel_y ;
+	 aux[i+2] =  sensor_data.accel_z ;
+	 aux[i+3] =  sensor_data.pressao ;
+     loop_count++;
 
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-  }
+	}
   /* USER CODE END 3 */
 }
 
@@ -187,7 +222,7 @@ static void MX_SPI1_Init(void)
   hspi1.Init.CLKPolarity = SPI_POLARITY_LOW;
   hspi1.Init.CLKPhase = SPI_PHASE_1EDGE;
   hspi1.Init.NSS = SPI_NSS_SOFT;
-  hspi1.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_16;
+  hspi1.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_256;
   hspi1.Init.FirstBit = SPI_FIRSTBIT_MSB;
   hspi1.Init.TIMode = SPI_TIMODE_DISABLE;
   hspi1.Init.CRCCalculation = SPI_CRCCALCULATION_DISABLE;
