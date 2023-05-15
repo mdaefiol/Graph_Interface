@@ -18,8 +18,6 @@
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
-#include <string.h>
-#include <stdlib.h>
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
@@ -45,14 +43,6 @@ SPI_HandleTypeDef hspi1;
 
 UART_HandleTypeDef huart2;
 
-typedef struct {
-    float accel_x;
-    float accel_y;
-    float accel_z;
-    float pressao;
-} SensorData;
-
-
 /* USER CODE BEGIN PV */
 
 /* USER CODE END PV */
@@ -69,6 +59,7 @@ static void MX_USART2_UART_Init(void);
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
 
+extern FRAM_STATES FRAM_state;
 /* USER CODE END 0 */
 
 /**
@@ -101,62 +92,61 @@ int main(void)
   MX_GPIO_Init();
   MX_SPI1_Init();
   MX_USART2_UART_Init();
-
   /* USER CODE BEGIN 2 */
 
   // Enviar byte 0x01 para iniciar a recepção de dados
 
-  uint8_t rx_byte[1] = {0x01};
-  uint8_t rx_buffer[16];
-  SensorData sensor_data = {0};
-
-  float aux[6];
-
-  uint32_t data_hex;
-  float data_float;
-
-
-  int data_received_count = 0;
-  int loop_count = 0;
-  HAL_UART_Transmit(&huart2, rx_byte, 1, 1000);
+  extern uint8_t receiv_Data[16];
+  uint8_t data[16] = {0x32, 0xA1, 0xC8, 0x0F, 0x71, 0xE9, 0x55, 0x80, 0x9B, 0xF2, 0x4D, 0x67, 0xB8, 0x23, 0x5E, 0xD6};
+  extern uint8_t i;
+  uint16_t address;
+  FRAM_state = ENABLE_WRITE;
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
 
-while (data_received_count < 4 && loop_count < 2 ) {
+while (1) {
 
-     if (rx_byte[0] == 0x01) {
-         HAL_UART_Receive(&huart2, rx_buffer, 16, 1000);
-         data_hex = (rx_buffer[0] << 24) | (rx_buffer[1] << 16) | (rx_buffer[2] << 8) | rx_buffer[3];
-         data_float = *(float*)&data_hex;
-         sensor_data.accel_x = data_float;
+	  switch(FRAM_state)
+	{
+		case FRAM_READ_ID:
+			FRAM_state = WAIT_FRAM_READ_ID;
+			FRAM_ID();
+			//calculate_EMA();
+		break;
+		// entra quando estiver no estado AGUARDANDO LANÇAMENTO -> state = ENABLE_WRITE;
+		case ENABLE_WRITE:
+			FRAM_state = WAIT_ENABLE_WRITE;
+			FRAM_enablewrite();
+		break;
+		case FRAM_WRITE:
+			FRAM_state = WAIT_FRAM_WRITE;
+			FRAM_Write(0x6004, data, 16); // 16*2
+		break;
 
-         data_hex = (rx_buffer[4] << 24) | (rx_buffer[5] << 16) | (rx_buffer[6] << 8) | rx_buffer[7];
-         data_float = *(float*)&data_hex;
-         sensor_data.accel_y = data_float;
+		case FRAM_READ_COMMAND:
+			FRAM_state = WAIT_FRAM_READ_COMMAND;
+			FRAM_Read_Command(0x6034); // 33 +1 ?????????????????????? faz sentido pq é uma word, anda de 2 em 2
+		break;
 
-         data_hex = (rx_buffer[8] << 24) | (rx_buffer[9] << 16) | (rx_buffer[10] << 8) | rx_buffer[11];
-         data_float = *(float*)&data_hex;
-         sensor_data.accel_z = data_float;
+		case FRAM_READ:
+			FRAM_state = WAIT_FRAM_READ;
+			FRAM_Read(receiv_Data, 16);
+		break;
 
-         data_hex = (rx_buffer[12] << 24) | (rx_buffer[13] << 16) | (rx_buffer[14] << 8) | rx_buffer[15];
-         data_float = *(float*)&data_hex;
-         sensor_data.pressao = data_float;
+		case FRAM_IDLE:
+			HAL_UART_Transmit(&huart2, receiv_Data, 16, 1000);
+			FRAM_state = FRAM_READ_COMMAND;
+		break;
 
-         data_received_count++;
-
-     3
-	 aux[i] =  sensor_data.accel_x ;
-	 aux[i+1] =  sensor_data.accel_y ;
-	 aux[i+2] =  sensor_data.accel_z ;
-	 aux[i+3] =  sensor_data.pressao ;
-     loop_count++;
-
-    /* USER CODE END WHILE */
-
-    /* USER CODE BEGIN 3 */
+		default:
+			break;
 	}
+/* USER CODE END WHILE */
+
+/* USER CODE BEGIN 3 */
+}
   /* USER CODE END 3 */
 }
 
@@ -253,7 +243,7 @@ static void MX_USART2_UART_Init(void)
 
   /* USER CODE END USART2_Init 1 */
   huart2.Instance = USART2;
-  huart2.Init.BaudRate = 9600;
+  huart2.Init.BaudRate = 115200;
   huart2.Init.WordLength = UART_WORDLENGTH_8B;
   huart2.Init.StopBits = UART_STOPBITS_1;
   huart2.Init.Parity = UART_PARITY_NONE;

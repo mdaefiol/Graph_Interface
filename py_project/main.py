@@ -23,7 +23,7 @@ class SerialApp():
 
     # Leitura de dados
     def read_serial(self):
-        data_read = self.serial_port.read(8)
+        data_read = self.serial_port.read(4)
         return data_read
 
     # Finaliza a porta serial
