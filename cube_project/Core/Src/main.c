@@ -97,55 +97,70 @@ int main(void)
   // Enviar byte 0x01 para iniciar a recepção de dados
 
   extern uint8_t receiv_Data[16];
-  uint8_t data[16] = {0x32, 0xA1, 0xC8, 0x0F, 0x71, 0xE9, 0x55, 0x80, 0x9B, 0xF2, 0x4D, 0x67, 0xB8, 0x23, 0x5E, 0xD6};
-  extern uint8_t i;
-  uint16_t address;
-  FRAM_state = ENABLE_WRITE;
+  uint16_t address = 0x0000;
+  FRAM_state = FRAM_READ_COMMAND;
+
+/*
+  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_0, GPIO_PIN_RESET);
+  uint8_t cmd[3] = {0x03, 0x00, 0x00 };
+  HAL_SPI_Transmit(&hspi1, (uint8_t *)&cmd, 3 ,1000);
+  HAL_SPI_Receive(&hspi1, receiv_Data, 16, 1000);
+  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_0, GPIO_PIN_SET);
+
+  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_0, GPIO_PIN_RESET);
+  uint8_t cmd1[3] = {0x03, 0x00, 0x10 };
+  HAL_SPI_Transmit(&hspi1, (uint8_t *)&cmd1, 3 ,1000);
+  HAL_SPI_Receive(&hspi1, receiv_Data, 16, 1000);
+  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_0, GPIO_PIN_SET);
+
+  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_0, GPIO_PIN_RESET);
+  uint8_t cmd2[3] = {0x03, 0x00, 0x20 };
+  HAL_SPI_Transmit(&hspi1, (uint8_t *)&cmd2, 3 ,1000);
+  HAL_SPI_Receive(&hspi1, receiv_Data, 16, 1000);
+  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_0, GPIO_PIN_SET);
+
+  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_0, GPIO_PIN_RESET);
+  uint8_t cmd3[3] = {0x03, 0x00, 0x30 };
+  HAL_SPI_Transmit(&hspi1, (uint8_t *)&cmd3, 3 ,1000);
+  HAL_SPI_Receive(&hspi1, receiv_Data, 16, 1000);
+  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_0, GPIO_PIN_SET);
+
+  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_0, GPIO_PIN_RESET);
+  uint8_t cmd4[3] = {0x03, 0x00, 0x40 };
+  HAL_SPI_Transmit(&hspi1, (uint8_t *)&cmd4, 3 ,1000);
+  HAL_SPI_Receive(&hspi1, receiv_Data, 16, 1000);
+  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_0, GPIO_PIN_SET);
+*/
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
 
 while (1) {
-
 	  switch(FRAM_state)
 	{
-		case FRAM_READ_ID:
-			FRAM_state = WAIT_FRAM_READ_ID;
-			FRAM_ID();
-			//calculate_EMA();
-		break;
-		// entra quando estiver no estado AGUARDANDO LANÇAMENTO -> state = ENABLE_WRITE;
-		case ENABLE_WRITE:
-			FRAM_state = WAIT_ENABLE_WRITE;
-			FRAM_enablewrite();
-		break;
-		case FRAM_WRITE:
-			FRAM_state = WAIT_FRAM_WRITE;
-			FRAM_Write(0x6004, data, 16); // 16*2
-		break;
-
 		case FRAM_READ_COMMAND:
 			FRAM_state = WAIT_FRAM_READ_COMMAND;
-			FRAM_Read_Command(0x6034); // 33 +1 ?????????????????????? faz sentido pq é uma word, anda de 2 em 2
-		break;
-
+			FRAM_Read_Command(address);
+			address += 0x10;
+			break;
 		case FRAM_READ:
+			//memset(receiv_Data, 0x00, 16);
 			FRAM_state = WAIT_FRAM_READ;
 			FRAM_Read(receiv_Data, 16);
 		break;
 
 		case FRAM_IDLE:
 			HAL_UART_Transmit(&huart2, receiv_Data, 16, 1000);
-			FRAM_state = FRAM_READ_COMMAND;
+			FRAM_state = FRAM_IDLE;
 		break;
 
 		default:
 			break;
 	}
-/* USER CODE END WHILE */
+    /* USER CODE END WHILE */
 
-/* USER CODE BEGIN 3 */
+    /* USER CODE BEGIN 3 */
 }
   /* USER CODE END 3 */
 }
@@ -212,7 +227,7 @@ static void MX_SPI1_Init(void)
   hspi1.Init.CLKPolarity = SPI_POLARITY_LOW;
   hspi1.Init.CLKPhase = SPI_PHASE_1EDGE;
   hspi1.Init.NSS = SPI_NSS_SOFT;
-  hspi1.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_256;
+  hspi1.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_64;
   hspi1.Init.FirstBit = SPI_FIRSTBIT_MSB;
   hspi1.Init.TIMode = SPI_TIMODE_DISABLE;
   hspi1.Init.CRCCalculation = SPI_CRCCALCULATION_DISABLE;

@@ -76,6 +76,7 @@ void HAL_SPI_RxCpltCallback(SPI_HandleTypeDef *hspi) {
 	  		    DATA_FRAM[3] = (receiv_Data[15] << 24) | (receiv_Data[14] << 16) | (receiv_Data[13] << 8) | receiv_Data[12];
 	  		    transf_float[3] = *(float*)&DATA_FRAM[3];
  	  			HAL_GPIO_WritePin(GPIOB, GPIO_PIN_0, GPIO_PIN_SET); //OK
+ 	  			byte[0] = 0x02;
  	  		break;
  	  		default:
  	  			break;
@@ -160,7 +161,7 @@ void FRAM_Read_Command(uint16_t address){
 
 void FRAM_Read(uint8_t *data_receive, uint16_t size){
 
-    HAL_GPIO_WritePin(GPIOB, GPIO_PIN_0, GPIO_PIN_RESET);
+    //HAL_GPIO_WritePin(GPIOB, GPIO_PIN_0, GPIO_PIN_RESET);
 
     HAL_SPI_Receive_IT(&hspi1, data_receive, size);
 }
