@@ -1,7 +1,7 @@
 import serial
 import serial.tools.list_ports
 import PySimpleGUI as sg
-
+import struct
 
 # Define a classe a ser utilizada
 class SerialApp():
@@ -31,13 +31,26 @@ class SerialApp():
         self.serial_port.close()
 
 
-# Salva o arquivo .txt dentro da pasta do projeto
-def save_to_file(data, filename):
-    with open(filename, 'a') as file:
-        hex_data = data
-        hex_data_with_comma = ',\n'.join(hex_data[i:i + 2] for i in range(0, len(hex_data), 2))
-        file.write(hex_data_with_comma)
+def store_data_in_columns(data):
+    num_columns = 4
+    columns = [[] for _ in range(num_columns)]
+
+    for i, item in enumerate(data):
+        column_index = i % num_columns
+        columns[column_index].append(item)
+
+    return columns
+
+def save_data_to_file(columns, filename):
+    with open(filename, 'w') as output_file:
+        max_length = max(len(column) for column in columns)
+
+        for i in range(max_length):
+            line = '\t'.join(column[i] if i < len(column) else '' for column in columns)
+            output_file.write(line + '\n')
     show_confirmation_window()
+
+
 
 # Exibe uma janela de confirmação
 def show_confirmation_window():
@@ -100,8 +113,9 @@ def main():
             window["-START-"].update(disabled=True)               # Desabilita o botão "START"
 
         if event == "-SAVE-":
-            data = window["-DATA-"].get()                         # Obtém os dados recebidos
-            save_to_file(data, "data.txt")                        # Salva os dados em um arquivo data.txt
+            data = values["-DATA-"].split("\n")                    # Obtém os dados recebidos como uma lista
+            result = store_data_in_columns(data)                  # Organiza os dados em colunas
+            save_data_to_file(result, "output.txt")                # Salva os dados em um arquivo de texto
 
         if event == "-START-":
             if serial_app.connected_port:
@@ -114,10 +128,12 @@ def main():
         if connected:
             try:
                 data = serial_app.read_serial().hex()
+                bytes_data = bytes.fromhex(data)
+                float_value = struct.unpack('!f', bytes_data)[0]
                 if data:
-                    window["-DATA-"].print(data)                 # Printa os dados na interface
-
+                    window["-DATA-"].print(float_value)
             except Exception as e:
+                # Trata qualquer exceção que possa ocorrer durante a leitura e conversão dos dados
                 sg.popup_error("Erro ao ler dados da porta.")
 
         if event == sg.WIN_CLOSED:

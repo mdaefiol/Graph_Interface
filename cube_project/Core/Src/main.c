@@ -95,11 +95,11 @@ int main(void)
   /* USER CODE BEGIN 2 */
 
   // Enviar byte 0x01 para iniciar a recepção de dados
-
+  extern uint32_t DATA_FRAM[4];
   extern uint8_t receiv_Data[16];
+  extern uint8_t send_Data[16];
   uint16_t address = 0x0000;
   FRAM_state = FRAM_READ_COMMAND;
-
 /*
   HAL_GPIO_WritePin(GPIOB, GPIO_PIN_0, GPIO_PIN_RESET);
   uint8_t cmd[3] = {0x03, 0x00, 0x00 };
@@ -142,17 +142,18 @@ while (1) {
 		case FRAM_READ_COMMAND:
 			FRAM_state = WAIT_FRAM_READ_COMMAND;
 			FRAM_Read_Command(address);
-			address += 0x10;
 			break;
 		case FRAM_READ:
 			//memset(receiv_Data, 0x00, 16);
 			FRAM_state = WAIT_FRAM_READ;
 			FRAM_Read(receiv_Data, 16);
+			address += 0x10;
 		break;
 
 		case FRAM_IDLE:
-			HAL_UART_Transmit(&huart2, receiv_Data, 16, 1000);
-			FRAM_state = FRAM_IDLE;
+			HAL_Delay(10);
+			HAL_UART_Transmit(&huart2, send_Data, 16, 1000);
+			FRAM_state = FRAM_READ_COMMAND;
 		break;
 
 		default:
@@ -227,7 +228,7 @@ static void MX_SPI1_Init(void)
   hspi1.Init.CLKPolarity = SPI_POLARITY_LOW;
   hspi1.Init.CLKPhase = SPI_PHASE_1EDGE;
   hspi1.Init.NSS = SPI_NSS_SOFT;
-  hspi1.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_64;
+  hspi1.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_256;
   hspi1.Init.FirstBit = SPI_FIRSTBIT_MSB;
   hspi1.Init.TIMode = SPI_TIMODE_DISABLE;
   hspi1.Init.CRCCalculation = SPI_CRCCALCULATION_DISABLE;
