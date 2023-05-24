@@ -97,7 +97,11 @@ int main(void)
   // Enviar byte 0x01 para iniciar a recepção de dados
   extern uint32_t DATA_FRAM[4];
   extern uint8_t receiv_Data[16];
-  extern uint8_t send_Data[16];
+  extern uint8_t send_Data1[4];
+  extern uint8_t send_Data2[4];
+  extern uint8_t send_Data3[4];
+  extern uint8_t send_Data4[4];
+
   uint16_t address = 0x0000;
   FRAM_state = FRAM_READ_COMMAND;
 /*
@@ -141,6 +145,7 @@ while (1) {
 	{
 		case FRAM_READ_COMMAND:
 			FRAM_state = WAIT_FRAM_READ_COMMAND;
+			HAL_Delay(4000);
 			FRAM_Read_Command(address);
 			break;
 		case FRAM_READ:
@@ -151,8 +156,10 @@ while (1) {
 		break;
 
 		case FRAM_IDLE:
-			HAL_Delay(10);
-			HAL_UART_Transmit(&huart2, send_Data, 16, 1000);
+			HAL_UART_Transmit(&huart2, send_Data1, 4, 1000);
+			HAL_UART_Transmit(&huart2, send_Data2, 4, 1000);
+			HAL_UART_Transmit(&huart2, send_Data3, 4, 1000);
+			HAL_UART_Transmit(&huart2, send_Data4, 4, 1000);
 			FRAM_state = FRAM_READ_COMMAND;
 		break;
 
